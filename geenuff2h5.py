@@ -1,20 +1,19 @@
 #! /usr/bin/env python3
 import os
+import yaml
 import argparse
 from pprint import pprint
 
 from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Controller
 
 
-# set this aside so it can be imported by fasta2h5.py
+# set this aside so it can be imported by fasta2h5.py and helixer.py
 export_parser_base = argparse.ArgumentParser()
 io_group = export_parser_base.add_argument_group("Data input and output")
 io_group.add_argument('--output-path', type=str, required=True,
                       help='Output file for the encoded data. Must end with ".h5"')
 
 data_group = export_parser_base.add_argument_group("Data generation parameters")
-data_group.add_argument('--chunk-size', type=int, default=20000,
-                        help='Size of the chunks each genomic sequence gets cut into. (Default is 20000)')
 data_group.add_argument('--compression', type=str, default='gzip', choices=['gzip', 'lzf'],
                         help='Compression algorithm used for the intermediate .h5 output files with a fixed compression '
                              'level of 4. (Default is "gzip", which is much slower than "lzf".)')
@@ -28,6 +27,30 @@ def check_export_args(args):
     print('{os.path.basename(__file__)} export config:')
     pprint(vars(args))
     print()
+
+
+def load_and_merge_config(args):
+    config = {}
+    if args.config_path and os.path.isfile(args.config_path):
+        with open(args.config_path, 'r') as f:
+            try:
+                config = yaml.safe_load(f)
+            except yaml.YAMLError as e:
+                print(f'An error occured during parsing of the YAML config file: {e} '
+                      '\nNot using the config file.')
+    else:
+        print(f'No config file found\n')
+
+    # merge the config and cli parameters with the cli parameters having priority
+    config = {**config, **vars(args)}
+    return argparse.Namespace(**config)
+
+
+def get_and_check_args(export_parser):
+    args = export_parser.parse_args()
+    args = load_and_merge_config(args)
+    check_export_args(args)
+    return args
 
 
 def main(args):
@@ -51,11 +74,15 @@ def main(args):
 
 
 if __name__ == '__main__':
+    io_group.add_argument('--config-path', type=str, default='config/geenuff2h5_config.yaml',
+                          help='Config in form of a YAML file with lower priority than parameters given on the command line.')
     io_group.add_argument('--input-db-path', type=str, default=None,
                           help='Path to the GeenuFF SQLite input database (has to contain only one genome).')
     io_group.add_argument('--add-additional', type=str, default='',
                           help='Outputs the datasets under alternatives/{add-additional}/ (and checks sort order against '
                                'existing "data" datasets). Use to add e.g. additional annotations from Augustus.')
+    data_group.add_argument('--chunk-size', type=int, default=20000,
+                            help='Size of the chunks each genomic sequence gets cut into. (Default is 20000)')
     data_group.add_argument('--modes', default='all',
                             help='Either "all" (default), or a comma separated list with desired members of the following '
                                  '{X, y, anno_meta, transitions} that should be exported. This can be useful, for '
@@ -64,6 +91,5 @@ if __name__ == '__main__':
     data_group.add_argument('--write-by', type=int, default=10_000_000_000,
                             help='Write in super-chunks with this many base pairs, which will be rounded to be '
                                  'divisible by chunk-size. (Default is 10_000_000_000).')
-    args = export_parser_base.parse_args()
-    check_export_args(args)
+    args = get_and_check_args(export_parser_base)
     main(args)
