@@ -10,18 +10,18 @@ from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Con
 class ParameterParser(object):
     """Bundles code that parses script parameters from the command line and a config file."""
 
-    def __init__(config_file_path=''):
+    def __init__(self, config_file_path=''):
         # Do NOT use default values in the argparse configuration but specify them seperately later
         # (except for the config file itself)
         # This is needed to give the cli parameters precedent over the ones in the config file
-        self.parser = argparse.ArgumentParser()
-        self.io_group = parser.add_argument_group("Data input and output")
-        io_group.add_argument('--config-path', type=str, default=config_file_path,
+        self.parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
+        self.io_group = self.parser.add_argument_group("Data input and output")
+        self.io_group.add_argument('--config-path', type=str, default=config_file_path,
                               help='Config in form of a YAML file with lower priority than parameters given on the command line.')
         self.io_group.add_argument('--output-path', type=str, required=True,
                                    help='Output file for the encoded data. Must end with ".h5"')
 
-        self.data_group = parser.add_argument_group("Data generation parameters")
+        self.data_group = self.parser.add_argument_group("Data generation parameters")
         self.data_group.add_argument('--compression', type=str, choices=['gzip', 'lzf'],
                                      help='Compression algorithm used for the intermediate .h5 output '
                                           'files with a fixed compression level of 4. '
@@ -31,13 +31,14 @@ class ParameterParser(object):
                                           'but can be much slower when many CPU cores can be utilized.')
 
         # Default values have to be specified - and potentially added - here
-        self.defaults = {'compression': 'gzip'}
+        self.defaults = {'compression': 'gzip', 'no_multiprocess': False}
 
-    @staticfunction
+    @staticmethod
     def check_args(args):
         assert args.output_path.endswith('.h5'), '--output-path must end with ".h5"'
         print(f'{os.path.basename(__file__)} export config:')
-        pprint(vars(args), '\n')
+        pprint(vars(args))
+        print()
 
     def load_and_merge_parameters(self, args):
         config = {}
@@ -106,6 +107,7 @@ if __name__ == '__main__':
 
     # need to add any default values like this
     pp.defaults['add_additional'] = ''
+    pp.defaults['chunk_size'] = 20000
     pp.defaults['modes'] = 'all'
     pp.defaults['write_by'] = 10_000_000_000
 
