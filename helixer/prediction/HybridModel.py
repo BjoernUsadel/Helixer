@@ -8,7 +8,7 @@ from tensorflow.keras.layers import (Conv1D, LSTM, Dense, Bidirectional, MaxPool
 from HelixerModel import HelixerModel, HelixerSequence
 
 
-class DanQSequence(HelixerSequence):
+class HybridSequence(HelixerSequence):
     def __init__(self, model, h5_file, mode, batch_size, shuffle):
         super().__init__(model, h5_file, mode, batch_size, shuffle)
         if self.class_weights is not None:
@@ -74,7 +74,7 @@ class DanQSequence(HelixerSequence):
             return X, y, sw
 
 
-class DanQModel(HelixerModel):
+class HybridModel(HelixerModel):
     def __init__(self):
         super().__init__()
         self.parser.add_argument('--cnn-layers', type=int, default=1)
@@ -89,7 +89,7 @@ class DanQModel(HelixerModel):
 
     @staticmethod
     def sequence_cls():
-        return DanQSequence
+        return HybridSequence
 
     def model(self):
         overhang = self.shape_train[1] % self.pool_size
@@ -161,5 +161,5 @@ class DanQModel(HelixerModel):
 
 
 if __name__ == '__main__':
-    model = DanQModel()
+    model = HybridModel()
     model.run()

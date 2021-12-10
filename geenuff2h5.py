@@ -56,6 +56,7 @@ class ParameterParser(object):
             print(f'No config file found\n')
 
         # merge the config and cli parameters with the cli parameters having priority
+        # there are no type checks being done for config parameters
         config = {**self.defaults, **config, **vars(args)}
         return argparse.Namespace(**config)
 
