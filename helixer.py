@@ -24,6 +24,24 @@ class HelixerParameterParser(ParameterParser):
         self.data_group.add_argument('--species-category', type=str, choices=['vertebrate', 'land_plant', 'fungi'],
                                      help='What model to use for the annotation. (Default is "vertebrate".)')
 
+        self.pred_group = self.parser.add_argument_group("Prediction parameters")
+        self.pred_group.add_argument('--batch-size', type=int,
+                                     help='The batch size for the raw predictions in TensorFlow. (Default is 8.)')
+        self.data_group.add_argument('--overlap', action='store_true',
+                                     help='Switches on the overlapping after predictions are made. Predictions with '
+                                          'overlapping will take much longer, but will have better quality towards '
+                                          'the start and end of each subsequence. Without this parameter --overlap-offset '
+                                          'and --overlap-core-length will have no effect.')
+        self.pred_group.add_argument('--overlap-offset', type=int,
+                                     help='Offset of the overlap processing. Smaller values may lead to better '
+                                          'predictions but will take longer. --chunk-input-len has to be evenly '
+                                          'divisible by this value. (Default is 3240.)')
+        self.pred_group.add_argument('--overlap-core-length', type=int,
+                                     help='Predicted sequences will be cut to this length to increase prediction '
+                                          'quality if overlapping is enabled. Smaller values may lead to better '
+                                          'predictions but will take longer. Has to be smaller than --chunk-input-len. '
+                                          '(Default is 10000.)')
+
         self.post_group = self.parser.add_argument_group("Post processing parameters")
         self.post_group.add_argument('--window-size', type=int, help='')
         self.post_group.add_argument('--edge-threshold', type=float, help='')
@@ -35,6 +53,9 @@ class HelixerParameterParser(ParameterParser):
             'species': '',
             'chunk_input_len': 19440,
             'species_category': 'vertebrate',
+            'overlap': False,
+            'overlap_offset': 3240,
+            'overlap_core_length': 10000,
             'window_size': 100,
             'edge_threshold': 0.1,
             'peak_threshold': 0.8,
@@ -49,8 +70,15 @@ class HelixerParameterParser(ParameterParser):
         # check if model block size fits the chunk input length (has to be evenly divisible)
         with h5py.File(self.model_filepath, 'r') as model:
             model_block_size = model['/model_weights/dense_1/dense_1/bias:0'].shape[0] // 8
-            msg = f'chunk input length (currently {args.chunk_input_len}) has to be evenly divisible by {model_block_size}'
+            msg = (f'chunk input length (currently {args.chunk_input_len}) '
+                   f'has to be evenly divisible by {model_block_size}')
             assert args.chunk_input_len % model_block_size == 0, msg
+
+        if args.overlap:
+            msg = '--overlap-offset has to evenly divide --chunk-input-len'
+            assert args.chunk_input_len % args.overlap_offset == 0, msg
+            msg = '--overlap-core-length has to be smaller than --chunk-input-len'
+            assert args.chunk_input_len > args.overlap_core_length, msg
 
 
 if __name__ == '__main__':
@@ -79,7 +107,7 @@ if __name__ == '__main__':
             '--prediction-output-path', tmp_pred_h5_path,
         ])
 
-        if hybrid_model_out != 0:
+        if hybrid_model_out.returncode != 0:
             print('\n An error occured during model prediction. Exiting.')
             # do not exit explicitely to remove tmp files
         else:
@@ -89,7 +117,7 @@ if __name__ == '__main__':
             helixerpost_cmd += [str(e) for e in helixerpost_params] + [args.output_path]
 
             helixerpost_out = subprocess.run(helixerpost_cmd)
-            if helixerpost_out == 0:
+            if helixerpost_out.returncode == 0:
                 print(f'\n Helixer successfully finished and GFF written to {output_path}.')
             else:
                 print('\n An error occured during post processing.')
