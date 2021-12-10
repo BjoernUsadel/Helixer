@@ -18,8 +18,6 @@ class ParameterParser(object):
         self.io_group = self.parser.add_argument_group("Data input and output")
         self.io_group.add_argument('--config-path', type=str, default=config_file_path,
                               help='Config in form of a YAML file with lower priority than parameters given on the command line.')
-        self.io_group.add_argument('--output-path', type=str, required=True,
-                                   help='Output file for the encoded data. Must end with ".h5"')
 
         self.data_group = self.parser.add_argument_group("Data generation parameters")
         self.data_group.add_argument('--compression', type=str, choices=['gzip', 'lzf'],
@@ -35,10 +33,7 @@ class ParameterParser(object):
 
     @staticmethod
     def check_args(args):
-        assert args.output_path.endswith('.h5'), '--output-path must end with ".h5"'
-        print(f'{os.path.basename(__file__)} export config:')
-        pprint(vars(args))
-        print()
+        pass
 
     def load_and_merge_parameters(self, args):
         config = {}
@@ -64,7 +59,21 @@ class ParameterParser(object):
         args = self.parser.parse_args()
         args = self.load_and_merge_parameters(args)
         ParameterParser.check_args(args)
+
+        print(f'{os.path.basename(__file__)} export config:')
+        pprint(vars(args))
+        print()
         return args
+
+
+class ExportParameterParser(ParameterParser):
+    def __init__(self, config_file_path=''):
+        self.io_group.add_argument('--h5-output-path', type=str, required=True,
+                                   help='HDF5 output file for the encoded data. Must end with ".h5"')
+
+    @staticmethod
+    def check_args(args):
+        assert args.h5_output_path.endswith('.h5'), '--output-path must end with ".h5"'
 
 
 def main(args):
@@ -81,14 +90,14 @@ def main(args):
         h5_group = '/data/'
 
     write_by = round(args.write_by / args.chunk_size) * args.chunk_size
-    controller = HelixerExportController(args.input_db_path, args.output_path, match_existing=match_existing,
+    controller = HelixerExportController(args.input_db_path, args.h5_output_path, match_existing=match_existing,
                                          h5_group=h5_group)
     controller.export(chunk_size=args.chunk_size, write_by=write_by, modes=modes, compression=args.compression,
                       multiprocess=not args.no_multiprocess)
 
 
 if __name__ == '__main__':
-    pp = ParameterParser(config_file_path='config/geenuff2h5_config.yaml')
+    pp = ExportParameterParser(config_file_path='config/geenuff2h5_config.yaml')
 
     pp.io_group.add_argument('--input-db-path', type=str, required=True,
                             help='Path to the GeenuFF SQLite input database (has to contain only one genome).')
