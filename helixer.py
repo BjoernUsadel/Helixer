@@ -10,54 +10,45 @@ from geenuff2h5 import ParameterParser
 from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Controller
 
 
+class HelixerParameterParser(ParameterParser):
+    def __init__(self, config_file_path=''):
+        super().__init__(config_file_path)
+        pp.io_group.add_argument('--fasta-path', type=str, required=True,
+                                 help='Directly convert from a FASTA file to .h5')
+        pp.io_group.add_argument('--gff-output-path', type=str, required=True, help='Output GFF file path.')
+        pp.io_group.add_argument('--species', type=str, help='Species name.')
+
+        pp.data_group.add_argument('--chunk-input-len', type=int,
+                                   help='How to chunk up the genomic sequence. Should grow with average gene length.')
+        pp.data_group.add_argument('--species-category', type=str, choices=['vertebrate', 'land_plant', 'fungi'],
+                                   help='What model to use for the annotation. (Default is "vertebrate".)')
+
+        pp.post_group = pp.parser.add_argument_group("Post processing parameters")
+        pp.post_group.add_argument('--window-size', type=int, help='')
+        pp.post_group.add_argument('--edge-threshold', type=float, help='')
+        pp.post_group.add_argument('--peak-threshold', type=float, help='')
+        pp.post_group.add_argument('--min-coding-length', type=int, help='')
+
+        helixer_defaults = {
+            'fasta_path': '',
+            'species': '',
+            'chunk_input_len': 19440,
+            'species_category': 'vertebrate',
+            'window_size': 100,
+            'edge_threshold': 0.1,
+            'peak_threshold': 0.8,
+            'min_coding_length': 100
+        }
+        pp.defaults = {**pp.defaults, **helixer_defaults}
+
+    @staticmethod
+    def check_args(args):
+        model['/model_weights/dense_1/dense_1/bias:0'].shape[0]
+        assert args.h5_output_path.endswith('.h5'), '--output-path must end with ".h5"'
+
+
 if __name__ == '__main__':
-    """
-    pp = ParameterParser(config_file_path='config/helixer_config.yaml')
-    pp.io_group.add_argument('--config-path', type=str, default='config/helixer_config.yaml',
-                             help='Config in form of a YAML file with lower priority than parameters given on the command line.')
-    pp.io_group.add_argument('--fasta-path', type=str, default=None, required=True
-                             help='Directly convert from a FASTA file to .h5')
-    pp.io_group.add_argument('--species', type=str, default='', help='Species name.')
-    pp.data_group.add_argument('--species-category', type=str, default='vertebrate', choices=['vertebrate', 'land_plant', 'fungi'],
-                               help='What model to use for the annotation. (Default is "vertebrate".)'
-
-    pp.post_group = parser.add_argument_group("Post processing parameters")
-    pp.post_group.add_argument('--window-size', type=int, default=100, help='')
-    pp.post_group.add_argument('--edge-threshold', type=float, default=0.1, help='')
-    pp.post_group.add_argument('--peak-threshold', type=float, default=0.8, help='')
-    pp.post_group.add_argument('--min-coding-length', type=int, default=100, help='')
-    args = get_and_check_args(export_parser_base)
-    """
-
-    pp = ParameterParser(config_file_path='config/helixer_config.yaml')
-    pp.io_group.add_argument('--fasta-path', type=str, required=True,
-                             help='Directly convert from a FASTA file to .h5')
-    pp.io_group.add_argument('--gff-output-path', type=str, required=True, help='Output GFF file path.')
-    pp.io_group.add_argument('--species', type=str, help='Species name.')
-
-    pp.data_group.add_argument('--chunk-input-len', type=int,
-                               help='How to chunk up the genomic sequence. Should grow with average gene length.')
-    pp.data_group.add_argument('--species-category', type=str, choices=['vertebrate', 'land_plant', 'fungi'],
-                               help='What model to use for the annotation. (Default is "vertebrate".)')
-
-    pp.post_group = pp.parser.add_argument_group("Post processing parameters")
-    pp.post_group.add_argument('--window-size', type=int, help='')
-    pp.post_group.add_argument('--edge-threshold', type=float, help='')
-    pp.post_group.add_argument('--peak-threshold', type=float, help='')
-    pp.post_group.add_argument('--min-coding-length', type=int, help='')
-
-    helixer_defaults = {
-        'fasta_path': '',
-        'species': '',
-        'chunk_input_len': 50000,
-        'species_category': 'vertebrate',
-        'window_size': 100,
-        'edge_threshold': 0.1,
-        'peak_threshold': 0.8,
-        'min_coding_length': 100
-    }
-    pp.defaults = {**pp.defaults, **helixer_defaults}
-
+    pp = HelixerParameterParser('config/helixer_config.yaml')
     args = pp.get_args()
 
     # generate the .h5 file in a temp dir, which is then deleted
@@ -76,7 +67,7 @@ if __name__ == '__main__':
 
         # calls to HybridModel.py and to HelixerPost, both have to be in PATH
         hybrid_model_out = subprocess.run([
-            'python', 'HybridModel.py',
+            'HybridModel.py', '--verbose',
             '--load-model-path', model_filepath,
             '--test-data', tmp_genome_h5_path,
             '--prediction-output-path', tmp_pred_h5_path,

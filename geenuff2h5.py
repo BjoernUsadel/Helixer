@@ -4,7 +4,7 @@ import yaml
 import argparse
 from pprint import pprint
 
-from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Controller
+from helixer.export.exporter import HelixerExportController
 
 
 class ParameterParser(object):
@@ -68,6 +68,7 @@ class ParameterParser(object):
 
 class ExportParameterParser(ParameterParser):
     def __init__(self, config_file_path=''):
+        super().__init__(config_file_path)
         self.io_group.add_argument('--h5-output-path', type=str, required=True,
                                    help='HDF5 output file for the encoded data. Must end with ".h5"')
 
