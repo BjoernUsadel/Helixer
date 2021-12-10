@@ -114,11 +114,11 @@ if __name__ == '__main__':
             print('\n Model predictions successful.')
             helixerpost_cmd = ['helixer_post_bin', tmp_genome_h5_path, tmp_pred_h5_path]
             helixerpost_params = [args.window_size, args.edge_threshold, args.peak_threshold, args.min_coding_length]
-            helixerpost_cmd += [str(e) for e in helixerpost_params] + [args.output_path]
+            helixerpost_cmd += [str(e) for e in helixerpost_params] + [args.gff_output_path]
 
             helixerpost_out = subprocess.run(helixerpost_cmd)
             if helixerpost_out.returncode == 0:
-                print(f'\n Helixer successfully finished and GFF written to {output_path}.')
+                print(f'\n Helixer successfully finished and GFF written to {gff_output_path}.')
             else:
                 print('\n An error occured during post processing.')
 
