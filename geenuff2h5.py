@@ -2,12 +2,13 @@
 import os
 import yaml
 import argparse
+from abc import ABC, abstractmethod
 from pprint import pprint
 
 from helixer.export.exporter import HelixerExportController
 
 
-class ParameterParser(object):
+class ParameterParser(ABC):
     """Bundles code that parses script parameters from the command line and a config file."""
 
     def __init__(self, config_file_path=''):
@@ -31,8 +32,8 @@ class ParameterParser(object):
         # Default values have to be specified - and potentially added - here
         self.defaults = {'compression': 'gzip', 'no_multiprocess': False}
 
-    @staticmethod
-    def check_args(args):
+    @abstractmethod
+    def check_args(self, args):
         pass
 
     def load_and_merge_parameters(self, args):
@@ -58,7 +59,7 @@ class ParameterParser(object):
     def get_args(self):
         args = self.parser.parse_args()
         args = self.load_and_merge_parameters(args)
-        ParameterParser.check_args(args)
+        self.check_args(args)
 
         print(f'{os.path.basename(__file__)} export config:')
         pprint(vars(args))
@@ -72,8 +73,7 @@ class ExportParameterParser(ParameterParser):
         self.io_group.add_argument('--h5-output-path', type=str, required=True,
                                    help='HDF5 output file for the encoded data. Must end with ".h5"')
 
-    @staticmethod
-    def check_args(args):
+    def check_args(self, args):
         assert args.h5_output_path.endswith('.h5'), '--output-path must end with ".h5"'
 
 

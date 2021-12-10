@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import os
 import yaml
+import h5py
 import argparse
 import tempfile
 import subprocess
@@ -13,21 +14,21 @@ from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Con
 class HelixerParameterParser(ParameterParser):
     def __init__(self, config_file_path=''):
         super().__init__(config_file_path)
-        pp.io_group.add_argument('--fasta-path', type=str, required=True,
-                                 help='Directly convert from a FASTA file to .h5')
-        pp.io_group.add_argument('--gff-output-path', type=str, required=True, help='Output GFF file path.')
-        pp.io_group.add_argument('--species', type=str, help='Species name.')
+        self.io_group.add_argument('--fasta-path', type=str, required=True,
+                                   help='Directly convert from a FASTA file to .h5')
+        self.io_group.add_argument('--gff-output-path', type=str, required=True, help='Output GFF file path.')
+        self.io_group.add_argument('--species', type=str, help='Species name.')
 
-        pp.data_group.add_argument('--chunk-input-len', type=int,
-                                   help='How to chunk up the genomic sequence. Should grow with average gene length.')
-        pp.data_group.add_argument('--species-category', type=str, choices=['vertebrate', 'land_plant', 'fungi'],
-                                   help='What model to use for the annotation. (Default is "vertebrate".)')
+        self.data_group.add_argument('--chunk-input-len', type=int,
+                                     help='How to chunk up the genomic sequence. Should grow with average gene length.')
+        self.data_group.add_argument('--species-category', type=str, choices=['vertebrate', 'land_plant', 'fungi'],
+                                     help='What model to use for the annotation. (Default is "vertebrate".)')
 
-        pp.post_group = pp.parser.add_argument_group("Post processing parameters")
-        pp.post_group.add_argument('--window-size', type=int, help='')
-        pp.post_group.add_argument('--edge-threshold', type=float, help='')
-        pp.post_group.add_argument('--peak-threshold', type=float, help='')
-        pp.post_group.add_argument('--min-coding-length', type=int, help='')
+        self.post_group = self.parser.add_argument_group("Post processing parameters")
+        self.post_group.add_argument('--window-size', type=int, help='')
+        self.post_group.add_argument('--edge-threshold', type=float, help='')
+        self.post_group.add_argument('--peak-threshold', type=float, help='')
+        self.post_group.add_argument('--min-coding-length', type=int, help='')
 
         helixer_defaults = {
             'fasta_path': '',
@@ -39,12 +40,17 @@ class HelixerParameterParser(ParameterParser):
             'peak_threshold': 0.8,
             'min_coding_length': 100
         }
-        pp.defaults = {**pp.defaults, **helixer_defaults}
+        self.defaults = {**self.defaults, **helixer_defaults}
 
-    @staticmethod
-    def check_args(args):
-        model['/model_weights/dense_1/dense_1/bias:0'].shape[0]
-        assert args.h5_output_path.endswith('.h5'), '--output-path must end with ".h5"'
+    def check_args(self, args):
+        self.model_filepath = os.path.join('models', f'{args.species_category}.h5')
+        assert os.path.isfile(self.model_filepath), f'{self.model_filepath} does not exists'
+
+        # check if model block size fits the chunk input length (has to be evenly divisible)
+        with h5py.File(self.model_filepath, 'r') as model:
+            model_block_size = model['/model_weights/dense_1/dense_1/bias:0'].shape[0] // 8
+            msg = f'chunk input length (currently {args.chunk_input_len}) has to be evenly divisible by {model_block_size}'
+            assert args.chunk_input_len % model_block_size == 0, msg
 
 
 if __name__ == '__main__':
