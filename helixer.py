@@ -15,8 +15,7 @@ from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Con
 class HelixerParameterParser(ParameterParser):
     def __init__(self, config_file_path=''):
         super().__init__(config_file_path)
-        self.io_group.add_argument('--fasta-path', type=str, required=True,
-                                   help='Directly convert from a FASTA file to .h5')
+        self.io_group.add_argument('--fasta-path', type=str, required=True, help='FASTA input file.')
         self.io_group.add_argument('--gff-output-path', type=str, required=True, help='Output GFF file path.')
         self.io_group.add_argument('--species', type=str, help='Species name.')
 
@@ -62,7 +61,7 @@ class HelixerParameterParser(ParameterParser):
             'window_size': 100,
             'edge_threshold': 0.1,
             'peak_threshold': 0.8,
-            'min_coding_length': 100
+            'min_coding_length': 100,
         }
         self.defaults = {**self.defaults, **helixer_defaults}
 
@@ -99,7 +98,9 @@ if __name__ == '__main__':
         controller.export_fasta_to_h5(chunk_size=args.chunk_input_len, compression=args.compression,
                                       multiprocess=not args.no_multiprocess, species=args.species)
 
-        print(colored('FASTA to H5 conversion done. Starting neural network prediction.\n', 'green'))
+        msg = 'with' if args.overlap else 'without'
+        msg = 'FASTA to H5 conversion done. Starting neural network prediction ' + msg + ' overlapping.\n'
+        print(colored(msg, 'green'))
         # hard coded model dir path, probably not optimal
         model_filepath = os.path.join('models', f'{args.species_category}.h5')
         assert os.path.isfile(model_filepath), f'{model_filepath} does not exists'
