@@ -61,7 +61,6 @@ class ParameterParser(ABC):
         args = self.load_and_merge_parameters(args)
         self.check_args(args)
 
-        print(f'{os.path.basename(__file__)} export config:')
         pprint(vars(args))
         print()
         return args

@@ -6,6 +6,7 @@ import argparse
 import tempfile
 import subprocess
 from pprint import pprint
+from termcolor import colored
 
 from geenuff2h5 import ParameterParser
 from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Controller
@@ -26,7 +27,8 @@ class HelixerParameterParser(ParameterParser):
 
         self.pred_group = self.parser.add_argument_group("Prediction parameters")
         self.pred_group.add_argument('--batch-size', type=int,
-                                     help='The batch size for the raw predictions in TensorFlow. (Default is 8.)')
+                                     help='The batch size for the raw predictions in TensorFlow. Should be as large as '
+                                          'possible to save prediction time. (Default is 8.)')
         self.data_group.add_argument('--overlap', action='store_true',
                                      help='Switches on the overlapping after predictions are made. Predictions with '
                                           'overlapping will take much longer, but will have better quality towards '
@@ -53,6 +55,7 @@ class HelixerParameterParser(ParameterParser):
             'species': '',
             'chunk_input_len': 19440,
             'species_category': 'vertebrate',
+            'batch_size': 8,
             'overlap': False,
             'overlap_offset': 3240,
             'overlap_core_length': 10000,
@@ -84,6 +87,7 @@ class HelixerParameterParser(ParameterParser):
 if __name__ == '__main__':
     pp = HelixerParameterParser('config/helixer_config.yaml')
     args = pp.get_args()
+    print(colored('Helixer.py config loaded. Starting FASTA to H5 conversion.\n', 'green'))
 
     # generate the .h5 file in a temp dir, which is then deleted
     with tempfile.TemporaryDirectory() as tmp_dirname:
@@ -95,30 +99,37 @@ if __name__ == '__main__':
         controller.export_fasta_to_h5(chunk_size=args.chunk_input_len, compression=args.compression,
                                       multiprocess=not args.no_multiprocess, species=args.species)
 
+        print(colored('FASTA to H5 conversion done. Starting neural network prediction.\n', 'green'))
         # hard coded model dir path, probably not optimal
         model_filepath = os.path.join('models', f'{args.species_category}.h5')
         assert os.path.isfile(model_filepath), f'{model_filepath} does not exists'
 
         # calls to HybridModel.py and to HelixerPost, both have to be in PATH
-        hybrid_model_out = subprocess.run([
+        hybrid_model_cmd = [
             'HybridModel.py', '--verbose',
             '--load-model-path', model_filepath,
             '--test-data', tmp_genome_h5_path,
             '--prediction-output-path', tmp_pred_h5_path,
-        ])
+            '--val-test-batch-size', str(args.batch_size),
+            '--overlap-offset', str(args.overlap_offset),
+            '--core-length', str(args.overlap_core_length),
+        ]
+        if args.overlap:
+            hybrid_model_cmd.append('--overlap')
+        hybrid_model_out = subprocess.run(hybrid_model_cmd)
 
         if hybrid_model_out.returncode != 0:
-            print('\n An error occured during model prediction. Exiting.')
-            # do not exit explicitely to remove tmp files
-        else:
-            print('\n Model predictions successful.')
-            helixerpost_cmd = ['helixer_post_bin', tmp_genome_h5_path, tmp_pred_h5_path]
-            helixerpost_params = [args.window_size, args.edge_threshold, args.peak_threshold, args.min_coding_length]
-            helixerpost_cmd += [str(e) for e in helixerpost_params] + [args.gff_output_path]
+            print(colored('\n An error occured during model prediction. Exiting.', 'red'))
+            exit()
 
-            helixerpost_out = subprocess.run(helixerpost_cmd)
-            if helixerpost_out.returncode == 0:
-                print(f'\n Helixer successfully finished and GFF written to {gff_output_path}.')
-            else:
-                print('\n An error occured during post processing.')
+        print(colored('Neural network prediction done. Starting post processing.\n', 'green'))
+        helixerpost_cmd = ['helixer_post_bin', tmp_genome_h5_path, tmp_pred_h5_path]
+        helixerpost_params = [args.window_size, args.edge_threshold, args.peak_threshold, args.min_coding_length]
+        helixerpost_cmd += [str(e) for e in helixerpost_params] + [args.gff_output_path]
+
+        helixerpost_out = subprocess.run(helixerpost_cmd)
+        if helixerpost_out.returncode == 0:
+            print(colored(f'\n Helixer successfully finished and GFF written to {args.gff_output_path}.', 'green'))
+        else:
+            print(colored('\n An error occured during post processing. Exiting.', 'red'))
 
