@@ -119,7 +119,7 @@ if __name__ == '__main__':
         hybrid_model_out = subprocess.run(hybrid_model_cmd)
 
         if hybrid_model_out.returncode != 0:
-            print(colored('\n An error occured during model prediction. Exiting.', 'red'))
+            print(colored('\nAn error occured during model prediction. Exiting.', 'red'))
             exit()
 
         print(colored('Neural network prediction done. Starting post processing.\n', 'green'))
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 
         helixerpost_out = subprocess.run(helixerpost_cmd)
         if helixerpost_out.returncode == 0:
-            print(colored(f'\n Helixer successfully finished and GFF written to {args.gff_output_path}.', 'green'))
+            print(colored(f'\nHelixer successfully finished. GFF file written to {args.gff_output_path}.', 'green'))
         else:
-            print(colored('\n An error occured during post processing. Exiting.', 'red'))
+            print(colored('\nAn error occured during post processing. Exiting.', 'red'))
 
