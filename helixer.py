@@ -20,7 +20,9 @@ class HelixerParameterParser(ParameterParser):
         self.io_group.add_argument('--species', type=str, help='Species name.')
 
         self.data_group.add_argument('--chunk-input-len', type=int,
-                                     help='How to chunk up the genomic sequence. Should grow with average gene length.')
+                                     help='How to chunk up the genomic sequence. Should grow with expected average '
+                                          'gene length until up to roughly 200000. Has to be evenly divisible by '
+                                          'the block size of the used model, which is 9 at the moment. (Default is 19440.)')
         self.data_group.add_argument('--species-category', type=str, choices=['vertebrate', 'land_plant', 'fungi'],
                                      help='What model to use for the annotation. (Default is "vertebrate".)')
 
