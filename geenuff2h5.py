@@ -45,6 +45,12 @@ class ParameterParser(ABC):
                     if yaml_config:
                         # an empty yaml file will result in a None object
                         config = yaml_config
+                        # check if the types in the config file align with the types given in the defaults
+                        for key, value in config.items():
+                            assert key in self.defaults, f'Parameter "{key}" from the config file is unknown'
+                            msg = f'Type of config parameter "{key}" must be {type(self.defaults[key]).__name__}'
+                            assert type(value) == type(self.defaults[key]), msg
+
                 except yaml.YAMLError as e:
                     print(f'An error occured during parsing of the YAML config file: {e} '
                           '\nNot using the config file.')
