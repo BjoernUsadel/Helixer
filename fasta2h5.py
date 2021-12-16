@@ -2,8 +2,8 @@
 import argparse
 from pprint import pprint
 
+from helixer.core.scripts import ExportParameterParser
 from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Controller
-from geenuff2h5 import ExportParameterParser
 
 
 if __name__ == '__main__':

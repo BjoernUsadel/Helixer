@@ -1,14 +1,11 @@
 #! /usr/bin/env python3
 import os
-import yaml
 import h5py
-import argparse
 import tempfile
 import subprocess
-from pprint import pprint
 from termcolor import colored
 
-from geenuff2h5 import ParameterParser
+from helixer.core.scripts import ParameterParser
 from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Controller
 
 
