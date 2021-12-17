@@ -20,6 +20,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.utils import shuffle
 from pprint import pprint
+from termcolor import colored
 from terminaltables import AsciiTable
 
 from tensorflow.keras.callbacks import Callback
@@ -452,7 +453,7 @@ class HelixerModel(ABC):
             self.transition_weights = np.array(self.transition_weights, dtype = np.float32)
 
         if self.verbose:
-            print()
+            print(colored('HelixerModel config: ', 'yellow'))
             pprint(args)
 
     def generate_callbacks(self, train_generator):

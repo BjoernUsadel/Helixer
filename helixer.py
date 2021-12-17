@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import os
+import time
 import h5py
 import tempfile
 import subprocess
@@ -84,9 +85,10 @@ class HelixerParameterParser(ParameterParser):
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     pp = HelixerParameterParser('config/helixer_config.yaml')
     args = pp.get_args()
-    print(colored('Helixer.py config loaded. Starting FASTA to H5 conversion.\n', 'green'))
+    print(colored('helixer.py config loaded. Starting FASTA to H5 conversion.', 'green'))
 
     # generate the .h5 file in a temp dir, which is then deleted
     with tempfile.TemporaryDirectory() as tmp_dirname:
@@ -99,7 +101,7 @@ if __name__ == '__main__':
                                       multiprocess=not args.no_multiprocess, species=args.species)
 
         msg = 'with' if args.overlap else 'without'
-        msg = 'FASTA to H5 conversion done. Starting neural network prediction ' + msg + ' overlapping.\n'
+        msg = 'FASTA to H5 conversion done. Starting neural network prediction ' + msg + ' overlapping.'
         print(colored(msg, 'green'))
         # hard coded model dir path, probably not optimal
         model_filepath = os.path.join('models', f'{args.species_category}.h5')
@@ -119,7 +121,7 @@ if __name__ == '__main__':
         model = HybridModel(cli_args=hybrid_model_args)
         model.run()
 
-        print(colored('Neural network prediction done. Starting post processing.\n', 'green'))
+        print(colored('Neural network prediction done. Starting post processing.', 'green'))
 
         # call to HelixerPost, has to be in PATH
         helixerpost_cmd = ['helixer_post_bin', tmp_genome_h5_path, tmp_pred_h5_path]
@@ -128,7 +130,10 @@ if __name__ == '__main__':
 
         helixerpost_out = subprocess.run(helixerpost_cmd)
         if helixerpost_out.returncode == 0:
-            print(colored(f'\nHelixer successfully finished. GFF file written to {args.gff_output_path}.', 'green'))
+            run_time = time.time() - start_time
+            print(colored(f'\nHelixer successfully finished the annotation of {args.fasta_path} '
+                          f'in {run_time / (60 * 60):.2f} hours. '
+                          f'GFF file written to {args.gff_output_path}.', 'green'))
         else:
             print(colored('\nAn error occured during post processing. Exiting.', 'red'))
 

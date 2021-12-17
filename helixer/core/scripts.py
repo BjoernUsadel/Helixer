@@ -2,6 +2,7 @@ import os
 import yaml
 import argparse
 from pprint import pprint
+from termcolor import colored
 from abc import ABC, abstractmethod
 
 
@@ -64,6 +65,7 @@ class ParameterParser(ABC):
         args = self.load_and_merge_parameters(args)
         self.check_args(args)
 
+        print(colored('helixer.py config: ', 'yellow'))
         pprint(vars(args))
         print()
         return args
