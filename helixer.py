@@ -6,6 +6,7 @@ import subprocess
 from termcolor import colored
 
 from helixer.core.scripts import ParameterParser
+from helixer.prediction.HybridModel import HybridModel
 from helixer.export.exporter import HelixerExportController, HelixerFastaToH5Controller
 
 
@@ -104,9 +105,8 @@ if __name__ == '__main__':
         model_filepath = os.path.join('models', f'{args.species_category}.h5')
         assert os.path.isfile(model_filepath), f'{model_filepath} does not exists'
 
-        # calls to HybridModel.py and to HelixerPost, both have to be in PATH
-        hybrid_model_cmd = [
-            'HybridModel.py', '--verbose',
+        hybrid_model_args = [
+            '--verbose',
             '--load-model-path', model_filepath,
             '--test-data', tmp_genome_h5_path,
             '--prediction-output-path', tmp_pred_h5_path,
@@ -115,14 +115,13 @@ if __name__ == '__main__':
             '--core-length', str(args.overlap_core_length),
         ]
         if args.overlap:
-            hybrid_model_cmd.append('--overlap')
-        hybrid_model_out = subprocess.run(hybrid_model_cmd)
-
-        if hybrid_model_out.returncode != 0:
-            print(colored('\nAn error occured during model prediction. Exiting.', 'red'))
-            exit()
+            hybrid_model_args.append('--overlap')
+        model = HybridModel(cli_args=hybrid_model_args)
+        model.run()
 
         print(colored('Neural network prediction done. Starting post processing.\n', 'green'))
+
+        # call to HelixerPost, has to be in PATH
         helixerpost_cmd = ['helixer_post_bin', tmp_genome_h5_path, tmp_pred_h5_path]
         helixerpost_params = [args.window_size, args.edge_threshold, args.peak_threshold, args.min_coding_length]
         helixerpost_cmd += [str(e) for e in helixerpost_params] + [args.gff_output_path]

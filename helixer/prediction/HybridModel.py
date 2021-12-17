@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (Conv1D, LSTM, Dense, Bidirectional, MaxPooling1D, Dropout, Reshape,
                                      Activation, Input, BatchNormalization)
-from HelixerModel import HelixerModel, HelixerSequence
+from helixer.prediction.HelixerModel import HelixerModel, HelixerSequence
 
 
 class HybridSequence(HelixerSequence):
@@ -75,8 +75,8 @@ class HybridSequence(HelixerSequence):
 
 
 class HybridModel(HelixerModel):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cli_args=None):
+        super().__init__(cli_args=cli_args)
         self.parser.add_argument('--cnn-layers', type=int, default=1)
         self.parser.add_argument('--lstm-layers', type=int, default=1)
         self.parser.add_argument('--units', type=int, default=32)
