@@ -109,7 +109,7 @@ helixer_post_bin Arabidopsis_lyrata.h5 predictions.h5 100 0.1 0.8 60 Arabidopsis
 
 **Output:** The main output of the above commands is the gff3 file (Arabidopsis_lyrata_chromosome8_helixer.gff3)
 which contains the predicted genic structure (where the exons, introns, and coding regions are
-for every predicted gene in the genome). You can find more about the format 
+for every predicted gene in the genome). You can find more about the gff3 format 
 [here](https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md).
 You can readily derive other files, such as a fasta file of the proteome or the transcriptome, using
 a standard parser, for instance [gffread](https://github.com/gpertea/gffread).  
