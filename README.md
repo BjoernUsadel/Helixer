@@ -42,10 +42,13 @@ CUDA. The time it takes a decently experienced user to install Helixer is 20-30 
 There is the possibility to install Helixer on macOS which requires a few adjustments. Instructions can be
 found [here](docs/helixer_on_macOS.md).
 
-### GPU requirements
-For realistically sized datasets, an Nvidia GPU or an Apple Silicon GPU (M1/M2/M3) using
+### GPU/iGPU requirements
+For realistically sized datasets, an **Nvidia GPU** or an **Apple Silicon GPU (M1/M2/M3)** using
 Apple Metal Performance Shaders (MPS) GPU acceleration (beta support) will be necessary
 for acceptable performance.
+
+There is also some instructions to use **INTEL integrated GPU** in the manual section.
+Do not use this on simple UHD Graphics they might run slower than CPU.  
 
 The example below and all provided models should run on 
 an Nvidia GPU with 11GB Memory (e.g. GTX 1080 Ti) and with 8 Gb (e.g. GTX 1080).
