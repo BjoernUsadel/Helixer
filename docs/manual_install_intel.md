@@ -38,8 +38,8 @@ pip install requests
 pip install -r requirements.3.10.intelXPU.txt
 
 ```
-This installs requirements including some intel libraries currently  
-Including intel dpcpp-cpp-rt==2024.2.1 which has been tested 
+This installs requirements including some intel libraries currently including:  
+intel dpcpp-cpp-rt==2024.2.1 which has been tested  
 dpcpp-cpp-rt==2025.0.1 might work as well it is offically supported on the last intel TF maintainance release 
 
 The steps below assume you are working in the same environment.
@@ -70,7 +70,7 @@ pytest --verbose tests/test_helixer.py
 ```
 
 ### XPU requirements 
-To run on a XPU we use intel tensorflow extensions these should register as XPU 
+We use intel tensorflow extensions these should register as XPU 
 When does it pay off? 
  (your CPU ends in HX the GPU is crippled for use with NVIDA so use that)  UHD Graphics 710  - no much slower ca 2024 processur Like Core i3/5/7
  ARC 
