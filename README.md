@@ -47,7 +47,7 @@ For realistically sized datasets, an **Nvidia GPU** or an **Apple Silicon GPU (M
 Apple Metal Performance Shaders (MPS) GPU acceleration (beta support) will be necessary
 for acceptable performance.
 
-There is also some instructions to use **INTEL integrated GPU** in the manual section for intel [manual installation](#manual_install_intel.md).
+There is also some instructions to use **INTEL integrated GPU** in the manual section for intel [manual installation](docs/manual_install_intel.md).
 Do not use this on simple UHD Graphics they might run slower than CPU.  
 
 The example below and all provided models should run on 
