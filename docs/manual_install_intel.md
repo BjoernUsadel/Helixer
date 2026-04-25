@@ -80,7 +80,7 @@ When does it pay off?
 | **Core 14th Gen (H)** | i7-14700H | Iris Xe (96 EU) | **2.2 - 2.5** |  Uses older Vector Engines. **untested**|
 | **Core Ultra Series 1 (H)** | Ultra 7 155H | Arc Xe-LPG (8 Xe) | **4.5 - 4.7** | **New** Good driver support via Intel Extension for TensorFlow (ITEX). **untested**|
 | **Core Ultra Series 2 (V)** | Ultra 7 258V | Arc Xe2-LPG (8 Xe2) | **4.0 - 4.2** | **untested** |
-| **Core Ultra Series 2 (H)** | Ultra 9 285H | Arc Xe-LPG+ (8 Xe) | **4.6 - 4.9** | **The Sweet Spot.** High clock speeds make this the most consistent FP32 performer for mobile workstations. **untested**|
+| **Core Ultra Series 2 (H)** | Ultra 9 285H | Arc Xe-LPG+ (8 Xe) | **4.6 - 4.9** | **likely intel supported.** and fastish. **untested**|
 | **Core Ultra Series 2 (HX)**| Ultra 9 285HX | Arc Xe-LPG+ (4 Xe) | **2.1 - 2.4** | avoid HX iGPU core count is halved compared to "H" chips. **untested**|
 | **Core Ultra Series 3 (H)** | Ultra X9 388H | Arc Xe3-LPG (12 Xe3)| **6.5 - 7.5** | **Might not be suppoerted anymore by intel**. **untested**|
 
